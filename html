@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IBGE Data</title>
+</head>
+<body>
+    <h1>Total Regions</h1>
+    <div id="regions"></div>
+
+    <h1>Federal Units by Region</h1>
+    <div id="federalUnitsByRegion"></div>
+
+    <h1>Cities by Federal Unit</h1>
+    <div id="citiesByFederalUnit"></div>
+
+    <script>
+        // Function to fetch data from the API
+        async function fetchData(url) {
+            const response = await fetch(url);
+            const data = await response.json();
+            return data;
+        }
+
+        // Display total regions
+        async function displayTotalRegions() {
+            const regionsData = await fetchData('https://api.brasilapi.com.br/v1/localidades/regioes');
+            const regionsList = regionsData.map(region => region.nome);
+            document.getElementById('regions').textContent = regionsList.join(', ');
+        }
+
+        // Display federal units by region
+        async function displayFederalUnitsByRegion() {
+            const regionsData = await fetchData('https://api.brasilapi.com.br/v1/localidades/regioes');
+            const federalUnitsData = await fetchData('https://api.brasilapi.com.br/v1/localidades/estados');
+
+            const result = regionsData.map(region => {
+                const federalUnitsInRegion = federalUnitsData.filter(unit => unit.regiao.id === region.id);
+                const unitNames = federalUnitsInRegion.map(unit => unit.nome);
+                return `${region.nome}: ${unitNames.join(', ')}`;
+            });
+
+            document.getElementById('federalUnitsByRegion').textContent = result.join('\n');
+        }
+
+        // Display cities by federal unit
+        async function displayCitiesByFederalUnit() {
+            const federalUnitsData = await fetchData('https://api.brasilapi.com.br/v1/localidades/estados');
+            const citiesData = await fetchData('https://api.brasilapi.com.br/v1/localidades/municipios');
+
+            const result = federalUnitsData.map(unit => {
+                const citiesInUnit = citiesData.filter(city => city.estado.id === unit.id);
+                const cityNames = citiesInUnit.map(city => city.nome);
+                return `${unit.nome}: ${cityNames.join(', ')}`;
+            });
+
+            document.getElementById('citiesByFederalUnit').textContent = result.join('\n');
+        }
+
+        // Call the display functions
+        displayTotalRegions();
+        displayFederalUnitsByRegion();
+        displayCitiesByFederalUnit();
+    </script>
+</body>
+</html>
